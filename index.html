@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#06070b">
 <title>Suttere — Crypto Financial Solutions</title>
+<script>
+/* Set the initial state before the page paints; static content remains visible
+   when scripting is unavailable or reduced motion is requested. */
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  document.documentElement.classList.add('entry-pending');
+  window.suttereEntryFallback=setTimeout(function(){
+    document.documentElement.classList.remove('entry-pending','entry-playing');
+  },4000);
+}
+</script>
 <style>
 /* ==========================================================================
    Suttere hero — precision build
@@ -430,7 +440,48 @@ h1 .l + .l{word-spacing:calc(1 * var(--u))}
   .coins{--u:.88px}
 }
 
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
+/* One entrance timeline. The background plate and veil never change. */
+.entry-pending :is(.brand,.links,.actions,.burger,.pill,h1,.sub,.cta,.coin,.cue){opacity:0}
+.entry-playing .brand{animation:entry-nav .58s cubic-bezier(.2,.7,.2,1) .04s backwards}
+.entry-playing .links{animation:entry-nav .55s cubic-bezier(.2,.7,.2,1) .13s backwards}
+.entry-playing .actions,.entry-playing .burger{animation:entry-nav .55s cubic-bezier(.2,.7,.2,1) .2s backwards}
+.entry-playing .pill{animation:entry-support .52s cubic-bezier(.2,.7,.2,1) .28s backwards}
+.entry-playing h1{animation:entry-type 1.02s cubic-bezier(.16,1,.3,1) .43s backwards}
+.entry-playing .sub{animation:entry-support .62s cubic-bezier(.2,.7,.2,1) .94s backwards}
+.entry-playing .cta{animation:entry-support .62s cubic-bezier(.2,.7,.2,1) 1.17s backwards}
+.entry-playing .coin{animation:entry-coin .7s cubic-bezier(.2,.7,.2,1) 1.02s backwards}
+.entry-playing .coin--eth,.entry-playing .coin--usdt{animation-delay:1.14s}
+.entry-playing .cue{animation:entry-cue .5s cubic-bezier(.2,.7,.2,1) 1.52s backwards}
+@media (max-width:993.98px){
+  .entry-pending .links,.entry-pending .actions{opacity:1}
+  .entry-playing .links,.entry-playing .actions{animation:none}
+}
+
+@keyframes entry-nav{
+  from{opacity:0;transform:translateY(-6px)}
+  to{opacity:1;transform:none}
+}
+@keyframes entry-support{
+  from{opacity:0;transform:translateY(9px)}
+  to{opacity:1;transform:none}
+}
+@keyframes entry-type{
+  from{opacity:0;clip-path:inset(0 0 100% 0);transform:translateY(12px)}
+  to{opacity:1;clip-path:inset(0 0 0 0);transform:none}
+}
+@keyframes entry-coin{
+  from{opacity:0;transform:scale(.94)}
+  to{opacity:1;transform:none}
+}
+@keyframes entry-cue{
+  from{opacity:0}
+  to{opacity:1}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .entry-pending :is(.brand,.links,.actions,.burger,.pill,h1,.sub,.cta,.coin,.cue){opacity:1}
+}
 </style>
 </head>
 <body>
@@ -524,6 +575,32 @@ h1 .l + .l{word-spacing:calc(1 * var(--u))}
   nav.addEventListener('focusout',function(e){ if(isOpen() && e.relatedTarget && !nav.contains(e.relatedTarget)) set(false); });
   (collapsed.addEventListener?collapsed.addEventListener('change',onBp):collapsed.addListener(onBp));
   function onBp(e){ if(!e.matches) set(false); }
+})();
+
+/* Start only after the first composition is ready, then remove every entrance
+   animation declaration when the final cue has settled. */
+(function(){
+  var root=document.documentElement;
+  if(!root.classList.contains('entry-pending')) return;
+  var begun=false, startTimer;
+  function begin(){
+    if(begun || !root.classList.contains('entry-pending')) return;
+    begun=true;
+    clearTimeout(startTimer);
+    requestAnimationFrame(function(){root.classList.replace('entry-pending','entry-playing');});
+  }
+  var loaded=new Promise(function(resolve){
+    if(document.readyState==='complete') resolve();
+    else window.addEventListener('load',resolve,{once:true});
+  });
+  Promise.all([loaded,document.fonts.ready]).then(begin,begin);
+  startTimer=setTimeout(begin,1400);
+  document.querySelector('.cue').addEventListener('animationend',function(e){
+    if(e.animationName==='entry-cue'){
+      root.classList.remove('entry-playing');
+      clearTimeout(window.suttereEntryFallback);
+    }
+  });
 })();
 </script>
 </body>
